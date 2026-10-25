@@ -1,0 +1,8 @@
+{
+  "name": "route-classroom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "无广告的代理配置课程静态网站",
+  "scripts": { "start": "node server.mjs" },
+  "engines": { "node": ">=18" }
+}

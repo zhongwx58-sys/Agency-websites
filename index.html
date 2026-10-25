@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="从第一次连接到链式代理、分流规则与网络排错。12 个模块、72 个课题，循序渐进的无广告代理配置教程。">
+  <title>路由课 · 从连接到理解</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="content/modules-01-06.js"></script>
+  <script defer src="content/modules-07-12.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+  <header id="header"></header>
+  <main id="main" tabindex="-1"></main>
+  <footer id="footer"></footer>
+  <dialog id="search-dialog" aria-labelledby="search-title">
+    <div class="search-top"><h2 id="search-title">搜索课程</h2><button class="icon-button" data-action="close-search" aria-label="关闭搜索">×</button></div>
+    <label class="sr-only" for="search-input">输入关键词</label>
+    <input id="search-input" type="search" placeholder="搜索课程、客户端、DNS、链式代理…" autocomplete="off">
+    <p id="search-count" class="small muted" aria-live="polite"></p>
+    <div id="search-results"></div>
+    <p class="search-tip">搜索全部课程正文 · 按 Esc 关闭</p>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="container">请启用 JavaScript 以浏览课程和使用教学演示。本站不加载第三方脚本。</p></noscript>
+</body>
+</html>
