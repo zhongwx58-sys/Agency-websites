@@ -53,7 +53,15 @@ const courseURL = id => `#/course/${id}`;
 const continueURL = () => courseURL(lastLesson);
 function brand() { return `<a class="brand" href="#/" aria-label="路由课首页"><span class="brand-mark">${icon('route')}</span>路由课<span class="brand-en">Proxy Guide</span></a>`; }
 function header(route) {
-  $('#header').innerHTML = `<div class="container nav-wrap">${brand()}<nav class="nav-links" id="nav-links" aria-label="主导航">${[['courses','课程目录'],['clients','客户端指南'],['labs','交互实验'],['troubleshooting','故障排查']].map(([path,title])=>`<a class="${route === path || (path === 'courses' && route === 'course') ? 'active' : ''}" href="#/${path}">${title}</a>`).join('')}</nav><div class="nav-actions"><button class="search-trigger" data-action="search" aria-label="搜索课程">${icon('search')}<span>搜索</span><kbd>Ctrl K</kbd></button><a class="button primary" href="${continueURL()}">${completed.length ? '继续学习' : '开始学习'} ${icon('arrow')}</a><button class="icon-button mobile-toggle" data-action="mobile-nav" aria-controls="nav-links" aria-expanded="false" aria-label="打开导航">${icon('menu')}</button></div></div>`;
+  if (!$('#nav-links')) $('#header').innerHTML = `<button class="nav-scrim" data-action="close-nav" aria-label="关闭导航"></button><div class="container nav-wrap glass-rail">${brand()}<button class="icon-button mobile-toggle" data-action="mobile-nav" aria-controls="nav-links" aria-expanded="false" aria-label="打开导航">${icon('menu')}</button><nav class="nav-links" id="nav-links" aria-label="主导航"><span class="glass-lens" aria-hidden="true"></span>${[['courses','课程目录','book'],['clients','客户端指南','monitor'],['labs','交互实验','layers'],['troubleshooting','故障排查','tool']].map(([path,title,glyph])=>`<a data-route="${path}" href="#/${path}">${icon(glyph)}<span>${title}</span></a>`).join('')}</nav><div class="nav-actions"><button class="search-trigger" data-action="search" aria-label="搜索课程，Ctrl K">${icon('search')}<span>搜索</span><kbd>Ctrl K</kbd></button><a class="button primary nav-start" href="${continueURL()}">${icon('arrow')}<span>开始学习</span></a></div></div>`;
+  document.querySelectorAll('#nav-links a').forEach(link => {
+    const active = route === link.dataset.route || (link.dataset.route === 'courses' && route === 'course');
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
+  });
+  $('.nav-start').href = continueURL();
+  $('.nav-start span').textContent = completed.length ? '继续学习' : '开始学习';
+  window.refreshGlass?.();
 }
 function footer() {
   $('#footer').innerHTML = `<div class="container"><div class="footer-top"><div class="footer-brand">${brand()}<p>把每一次连接，变成一次理解。<br>从零开始，学会配置、验证与排错。</p></div><div class="footer-col"><h3>按路径学习</h3><a href="${courseURL('1-1')}">从零开始</a><a href="#/courses">完整课程目录</a><a href="#/clients">客户端指南</a></div><div class="footer-col"><h3>动手与验证</h3><a href="#/labs">交互实验</a><a href="#/tools">IP 检测工具</a><a href="#/troubleshooting">故障排查</a></div><div class="footer-col"><h3>关于路由课</h3><a href="#/about">内容与来源</a><a href="#/about">无广告原则</a><a href="assets/mihomo-chain.example.yaml" download>下载链式配置示例</a></div></div><div class="footer-bottom"><span>路由课 · 独立、无广告的网络学习手册</span><span>内容初版 · 2026.10.25　学习进度仅保存在本机</span></div></div>`;
@@ -70,19 +78,77 @@ function networkDiagram() {
   const nodes = [ ['device',38,136,'monitor','你的设备','请求起点'], ['front',202,52,'server',networkMode==='single'?'代理节点':'前置代理','第一跳'], ['exit',300,204,'globe','落地出口','最终出口'], ['site',430,204,'globe','目标网站','访问目标'] ];
   const node = ([key,x,y,name,label,detail]) => {
     const inactive = (networkMode === 'direct' && ['front','exit'].includes(key)) || (networkMode === 'single' && key === 'exit');
-    return `<g class="node ${inactive?'inactive':'active'}" transform="translate(${x} ${y})" data-action="node" data-node="${key}" role="button" tabindex="0" aria-label="了解${label}"><rect width="62" height="62" rx="13"/><svg x="19" y="19" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${key==='exit'?'#315eae':'#454b54'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${paths[name]}"/></svg><text x="31" y="83" text-anchor="middle">${label}</text><text class="node-label" x="31" y="102" text-anchor="middle">${detail}</text></g>`;
+    return `<g class="node ${inactive?'inactive':'active'}" transform="translate(${x} ${y})" data-action="node" data-node="${key}" role="button" tabindex="0" aria-label="了解${label}"><rect class="node-hit" x="-8" y="-6" width="78" height="116"/><rect width="62" height="62" rx="13"/><svg x="19" y="19" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${key==='exit'?'#315eae':'#454b54'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${paths[name]}"/></svg><text x="31" y="83" text-anchor="middle">${label}</text><text class="node-label" x="31" y="102" text-anchor="middle">${detail}</text></g>`;
   };
   const info = selectedNode ? nodeInfo[selectedNode] : modes[networkMode];
   return `<div class="network-card"><div class="network-top"><strong>一次请求的旅程</strong><span class="tag">教学示意 · 非真实连接</span></div><div class="segmented" role="tablist" aria-label="选择网络路径">${Object.entries(modes).map(([key,value])=>`<button role="tab" data-action="network-mode" data-mode="${key}" aria-selected="${networkMode===key}">${value[0].replace('代理','')}</button>`).join('')}</div><div class="network-canvas"><svg class="network-svg" viewBox="0 0 530 335" role="group" aria-label="网络路径教学图，点击节点查看说明"><defs><pattern id="grid" width="19" height="19" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#d9d9e2"/></pattern></defs><rect x="8" y="0" width="514" height="318" fill="url(#grid)"/><path class="inactive-line" d="M100 167C140 167 130 83 202 83L275 83C348 83 290 235 360 235H430"/><path class="route-line" d="${routePath[networkMode]}"/>${nodes.map(node).join('')}<text x="410" y="53" text-anchor="middle" style="font-size:10px;fill:#757984">点击节点，理解每一跳</text></svg></div><div class="network-bottom" aria-live="polite"><b>${escapeHTML(info[0])}</b>${escapeHTML(info[1])}</div></div>`;
 }
-function home() {
-  return `<div class="container"><section class="hero"><div class="hero-copy"><div class="eyebrow">从零基础到进阶的网络学习手册</div><h1>从第一次连接，<br>到看懂每一条规则。</h1><p>从代理基础、客户端设置到链式代理、DNS 与分流，循序渐进地理解原理、完成配置，并学会验证结果。</p><div class="hero-actions"><a class="button primary" href="${continueURL()}">${completed.length?'继续学习':'开始第一课'} ${icon('arrow')}</a><a class="text-link" href="#/courses">浏览全部课程 ${icon('chevron')}</a></div><div class="hero-note">${icon('shield')}无广告 · 无推广链接 · 无需注册</div></div><div id="hero-network">${networkDiagram()}</div></section><div class="platform-strip"><span>选择你的设备，找到适合的起点</span>${[['windows','Windows'],['apple','macOS'],['android','Android'],['phone','iOS']].map(([key,title])=>`<a href="#/clients">${icon(key)}${title}</a>`).join('')}</div><section class="section"><div class="section-head"><div><h2>一步一步，搭起你的知识地图。</h2><p>12 个模块，72 个课题。从一条连接开始，逐渐理解整个网络。</p></div><a class="text-link" href="#/courses">查看课程目录 ${icon('arrow')}</a></div><div class="path-grid">${[
-    ['01','零基础入门','认识客户端、节点与订阅，完成第一次连接和结果检查。','模块 01–02','1-1','book'],
-    ['02','客户端与出口','找到适合设备的操作路线，分清 VPS、住宅与 ISP 出口。','模块 03–05','3-1','monitor'],
-    ['03','看懂流量路径','理解 TUN 与 DNS，连接前置和落地，让规则安排请求。','模块 06–08','6-1','route'],
-    ['04','验证与持续维护','交叉核对出口信息，维护配置，用证据定位常见问题。','模块 09–12','9-1','shield']
-  ].map(([n,title,desc,range,id,ic])=>`<a class="path-card" href="${courseURL(id)}"><div class="path-number"><span>学习阶段 ${n}</span>${icon(ic)}</div><h3>${title}</h3><p>${desc}</p><div class="path-bottom"><span>${range}</span>${icon('arrow')}</div></a>`).join('')}</div></section></div><section class="section feature-section"><div class="container feature-layout"><div class="feature-copy"><h2>复杂的配置，<br>从一张图开始理解。</h2><p>切换路径、调整规则，观察一次请求如何抵达目标。先看懂，再动手。</p><div class="feature-tabs" role="tablist" aria-label="核心专题">${[['chain','链式代理'],['rules','分流规则'],['dns','DNS 与 TUN']].map(([key,title])=>`<button class="feature-tab" role="tab" aria-selected="${feature===key}" data-action="feature" data-feature="${key}">${title}${icon('arrow')}</button>`).join('')}</div></div><div id="feature-panel">${featurePanel()}</div></div></section><div class="container trust-band"><div>${icon('book')}<h3>学会操作，也理解原因</h3><p>每课包含操作思路、结果检查和恢复方式，帮助你判断配置是否符合预期。</p></div><div>${icon('shield')}<h3>内容独立，绝对无广告</h3><p>没有广告位、赞助排名或返佣链接。工具按用途介绍，来源清晰可查。</p></div><div>${icon('lock')}<h3>按照自己的节奏学习</h3><p>无需账号。阅读进度保存在当前浏览器，随时从上一次的位置继续。</p></div></div>`;
+function homeVerification() {
+  const modes = {
+    direct: { rule: 'MATCH → DIRECT', path: '设备 → 目标网站', check: '请求有没有绕过代理？' },
+    single: { rule: 'MATCH → 单节点', path: '设备 → 代理节点 → 网站', check: '最终出口是哪一个？' },
+    chain: { rule: 'MATCH → 落地出口', path: '设备 → 前置 → 落地 → 网站', check: '前置与最终出口都对吗？' }
+  };
+  const current = modes[networkMode];
+  return `<div class="demo-evidence" aria-live="polite">
+    <div><span>示例规则</span><strong>${current.rule}</strong></div>
+    <div><span>预期路径</span><strong>${current.path}</strong></div>
+    <div><span>接下来核对</span><strong>${current.check}</strong></div>
+  </div>`;
 }
+
+let storyStep = 0;
+const storySteps = [
+  { title: '先找到这次请求', detail: '选定一个具体域名，记录请求来自哪个应用。', lesson: '1-2' },
+  { title: '再看第一条命中规则', detail: '规则从上到下匹配，命中后才知道会选择哪条路径。', lesson: '8-4' },
+  { title: '最后核对实际结果', detail: '把连接记录、最终出口和目标访问分别核对。', lesson: '9-6' }
+];
+function storyVisual() {
+  const panels = [
+    `<div class="story-browser"><div class="story-address">${icon('lock')} video.example.com</div><div class="story-request"><span class="story-request-icon">${icon('globe')}</span><div><strong>video.example.com</strong><small>这次练习要观察的请求</small></div><span class="story-status">第 1 步</span></div><div class="story-request quieter"><span class="story-request-icon">${icon('monitor')}</span><div><strong>发起请求的应用</strong><small>先记录设备与客户端，再判断接管方式</small></div></div></div>`,
+    `<div class="story-rules"><div class="story-file">rules · 教学示例</div><div><span>01</span><code>DOMAIN,internal.example.com,DIRECT</code></div><div class="selected"><span>02</span><code>DOMAIN-SUFFIX,example.com,指定出口</code><b>命中</b></div><div><span>03</span><code>MATCH,默认代理</code></div></div>`,
+    `<div class="story-outcome"><div class="story-outcome-path"><span>设备</span>${icon('arrow')}<span>前置</span>${icon('arrow')}<span class="selected">落地出口</span>${icon('arrow')}<span>网站</span></div><div class="story-outcome-check"><div>${icon('check')}<span>连接记录</span><small>核对链路</small></div><div>${icon('check')}<span>出口检测</span><small>核对最后一跳</small></div><div>${icon('check')}<span>目标访问</span><small>核对实际可用</small></div></div></div>`
+  ];
+  return `<div class="story-window" role="tabpanel" id="story-visual" aria-labelledby="story-tab-${storyStep}"><div class="story-window-top"><span class="window-dots"><i></i><i></i><i></i></span><span>${['请求记录','规则匹配','验证清单'][storyStep]}</span><span class="story-window-note">教学示意 · 非真实连接</span></div><div class="story-window-body">${panels[storyStep]}</div><div class="story-window-caption"><strong>${storySteps[storyStep].title}</strong><span>${storySteps[storyStep].detail}</span></div></div>`;
+}
+
+function home() {
+  return `<div class="home-page">
+    <div class="container">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">从零基础到进阶的网络学习手册</div>
+          <h1>从第一次连接，<br>到看懂每一条规则。</h1>
+          <p>从客户端接入到链式代理、DNS 与分流，用一张张路径图理解请求怎么走，再跟着课程检查实际结果。</p>
+          <div class="hero-actions"><a class="button primary" href="${continueURL()}">${completed.length?'继续学习':'开始第一课'} ${icon('arrow')}</a><a class="button outline" href="#/courses">浏览 72 课 ${icon('arrow')}</a></div>
+          <div class="hero-note">${icon('shield')}无广告 · 不需要账号 · 阅读进度保存在本机</div>
+        </div>
+        <div class="hero-console" aria-label="可切换的请求路径教学示意">
+          <div class="demo-windowbar"><span class="window-dots"><i></i><i></i><i></i></span><strong>路由实验台</strong><span class="demo-version">示例数据</span></div>
+          <div id="hero-network">${networkDiagram()}</div>
+          <div id="hero-verification">${homeVerification()}</div>
+        </div>
+      </section>
+      <div class="platform-strip"><span>按设备进入独立的操作路线</span>${[['windows','Windows'],['apple','macOS'],['android','Android'],['phone','iOS']].map(([key,title])=>`<a href="#/clients">${icon(key)}${title}</a>`).join('')}</div>
+    </div>
+
+    <section class="section story-section"><div class="container">
+      <div class="section-head"><div><div class="eyebrow">图解一节课的思路</div><h2>让每一步操作，都有可核对的画面。</h2><p>同一条请求，依次看来源、规则和出口；左边的说明与右边的示意同步切换。</p></div><a class="text-link" href="${courseURL('8-4')}">阅读规则课程 ${icon('arrow')}</a></div>
+      <div class="story-layout"><div class="story-steps"><div class="story-tablist" role="tablist" aria-orientation="vertical" aria-label="一次请求的三个检查步骤">${storySteps.map((step,index)=>`<button class="story-tab" id="story-tab-${index}" role="tab" aria-controls="story-visual" aria-selected="${storyStep===index}" data-action="story-step" data-step="${index}"><span class="story-step-number">0${index+1}</span><span><strong>${step.title}</strong><small>${step.detail}</small></span>${icon('arrow')}</button>`).join('')}</div><a class="text-link story-next" href="${courseURL(storySteps[storyStep].lesson)}">去学习这一环节 ${icon('arrow')}</a></div><div id="story-panel">${storyVisual()}</div></div>
+    </div></section>
+
+    <div class="container"><section class="section curriculum-section"><div class="section-head"><div><h2>按顺序学习，也能从当前问题开始。</h2><p>12 个模块、72 个课题。先完成一次连接，再理解更复杂的路径与规则。</p></div><a class="text-link" href="#/courses">查看完整课程 ${icon('arrow')}</a></div><div class="path-grid">${[
+      ['01','零基础入门','认识客户端、节点与订阅，完成第一次连接和结果检查。','模块 01–02','1-1','book'],
+      ['02','客户端与出口','找到适合设备的操作路线，分清 VPS、住宅与 ISP 出口。','模块 03–05','3-1','monitor'],
+      ['03','看懂流量路径','理解 TUN 与 DNS，连接前置和落地，让规则安排请求。','模块 06–08','6-1','route'],
+      ['04','验证与持续维护','交叉核对出口信息，维护配置，用证据定位常见问题。','模块 09–12','9-1','shield']
+    ].map(([n,title,desc,range,id,ic])=>`<a class="path-card" href="${courseURL(id)}"><div class="path-number"><span>学习阶段 ${n}</span>${icon(ic)}</div><h3>${title}</h3><p>${desc}</p><div class="path-bottom"><span>${range}</span>${icon('arrow')}</div></a>`).join('')}</div></section></div>
+
+    <section class="section feature-section"><div class="container feature-layout"><div class="feature-copy"><div class="eyebrow">专题导览</div><h2>把抽象配置，<br>放回具体请求里。</h2><p>切换专题，看它改变的是路径、规则，还是接管与解析。每个示意都能进入对应课程继续学习。</p><div class="feature-tabs" role="tablist" aria-label="核心专题">${[['chain','链式代理'],['rules','分流规则'],['dns','DNS 与 TUN']].map(([key,title])=>`<button class="feature-tab" role="tab" aria-selected="${feature===key}" data-action="feature" data-feature="${key}">${title}${icon('arrow')}</button>`).join('')}</div></div><div id="feature-panel">${featurePanel()}</div></div></section>
+    <div class="container trust-band"><div>${icon('book')}<h3>操作与原因一起讲</h3><p>每课都给出检查点和恢复方法，帮助你判断本次配置结果。</p></div><div>${icon('shield')}<h3>内容独立，绝对无广告</h3><p>没有广告位、赞助排名或返佣链接。工具按用途介绍，来源清楚。</p></div><div>${icon('lock')}<h3>学习进度留在本机</h3><p>无需注册。标记已读后，可以从上一次阅读的位置继续。</p></div></div>
+  </div>`;
+}
+
 function featurePanel() {
   const content = {
     chain: `<div class="feature-panel-top"><h3>让每一跳各司其职</h3><span class="tag blue">链式代理</span></div><div class="mini-flow">${[['monitor','设备'],['server','前置代理'],['globe','落地出口'],['globe','目标网站']].map(([ic,t],i)=>`${i?icon('arrow'):''}<div class="mini-node">${icon(ic)}${t}</div>`).join('')}</div><p>前置负责建立到落地节点的连接，落地负责最终出口。多选两个节点，不等于建立了链式代理。</p><a class="text-link" href="${courseURL('7-2')}">学习前置与落地顺序 ${icon('arrow')}</a>`,
@@ -144,7 +210,7 @@ function render() {
   footer();
   $('#search-dialog').close();
 }
-function updateNetwork() { ['hero-network','lab-network','lesson-network'].forEach(id=>{const element=document.getElementById(id);if(element)element.innerHTML=networkDiagram();}); }
+function updateNetwork() { ['hero-network','lab-network','lesson-network'].forEach(id=>{const element=document.getElementById(id);if(element)element.innerHTML=networkDiagram();}); if ($('#hero-verification')) $('#hero-verification').innerHTML=homeVerification(); }
 function search(query) {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const results = words.length ? lessons.filter(lesson => {const text=[lesson.title,lesson.summary,lesson.module.title,...lesson.sections.flatMap(section=>[section.title,...(section.paragraphs||[]),...(section.steps||[]),section.code?.value || '']),...(lesson.checks||[]),lesson.pitfall,lesson.recovery].join(' ').toLowerCase(); return words.every(word=>text.includes(word));}) : lessons.filter(lesson=>['1-1','5-2','7-2','8-4','9-6','12-3'].includes(lesson.id));
@@ -152,23 +218,31 @@ function search(query) {
   $('#search-results').innerHTML = results.length ? results.slice(0,20).map(lesson=>`<a class="search-result" href="${courseURL(lesson.id)}" data-action="search-result"><b>${lesson.id.replace('-','.')}　${escapeHTML(lesson.title)}</b><small>${escapeHTML(lesson.module.title)} · ${escapeHTML(lesson.summary)}</small></a>`).join('') : '<div class="empty-state">没有找到相关课程。试试“订阅”“DNS”或“链式”。</div>';
 }
 function openSearch() { $('#search-dialog').showModal();$('#search-input').value='';search('');$('#search-input').focus(); }
+function closeMobileNav(restoreFocus=false) {
+  $('#nav-links')?.classList.remove('open');
+  const toggle=$('[data-action="mobile-nav"]');
+  toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','打开导航');
+  if(restoreFocus)toggle?.focus();
+}
 document.addEventListener('click', async event => {
-  if (event.target.closest('#nav-links a, #course-sidebar a')) {
-    $('#nav-links')?.classList.remove('open');
+  if (event.target.closest('#nav-links a, .nav-start, #course-sidebar a')) {
+    closeMobileNav();
     $('#course-sidebar')?.classList.remove('open');
     document.querySelectorAll('[data-action="mobile-nav"], [data-action="course-menu"]').forEach(toggle => toggle.setAttribute('aria-expanded','false'));
   }
   const button = event.target.closest('[data-action]');
   if (!button) return;
   switch(button.dataset.action) {
-    case 'search':openSearch();break;
+    case 'search':if($('#nav-links').classList.contains('open'))closeMobileNav(true);openSearch();break;
     case 'close-search':$('#search-dialog').close();break;
     case 'search-result':$('#search-dialog').close();break;
-    case 'mobile-nav':{const open=$('#nav-links').classList.toggle('open');button.setAttribute('aria-expanded',open);button.setAttribute('aria-label',open?'关闭导航':'打开导航');break;}
+    case 'mobile-nav':{const open=$('#nav-links').classList.toggle('open');button.setAttribute('aria-expanded',open);button.setAttribute('aria-label',open?'关闭导航':'打开导航');window.refreshGlass?.();break;}
+    case 'close-nav':closeMobileNav(true);break;
     case 'filter':location.hash=`#/courses/${button.dataset.filter}`;break;
     case 'network-mode':networkMode=button.dataset.mode;selectedNode=null;updateNetwork();document.querySelector(`[data-mode="${networkMode}"]`)?.focus();break;
     case 'node':selectedNode=button.dataset.node;updateNetwork();document.querySelector(`[data-node="${selectedNode}"]`)?.focus();break;
     case 'feature':feature=button.dataset.feature;document.querySelectorAll('.feature-tab').forEach(tab=>tab.setAttribute('aria-selected',tab.dataset.feature===feature));$('#feature-panel').innerHTML=featurePanel();break;
+    case 'story-step':storyStep=Number(button.dataset.step);document.querySelectorAll('.story-tab').forEach(tab=>tab.setAttribute('aria-selected',Number(tab.dataset.step)===storyStep));$('#story-panel').innerHTML=storyVisual();$('.story-next').href=courseURL(storySteps[storyStep].lesson);break;
     case 'course-menu':{const open=$('#course-sidebar').classList.toggle('open');button.setAttribute('aria-expanded',open);break;}
     case 'section':event.preventDefault();document.getElementById(button.dataset.target)?.scrollIntoView({block:'start'});break;
     case 'complete':{
@@ -183,13 +257,14 @@ document.addEventListener('click', async event => {
     }
   }
 });
+document.addEventListener('focusin',event=>{if($('#nav-links')?.classList.contains('open')&&!event.target.closest('#header'))closeMobileNav();});
 document.addEventListener('input', event=>{if(event.target.id==='search-input')search(event.target.value);if(event.target.id==='domain-input')$('#rule-demo').innerHTML=ruleDemo(event.target.value);});
 document.addEventListener('change',event=>{if(event.target.matches('[data-check]')&&activeLesson){checks[`${activeLesson.id}:${event.target.dataset.check}`]=event.target.checked;persist('route-classroom-checks-v1',checks);}});
 document.addEventListener('keydown',event=>{
   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();if(!$('#search-dialog').open)openSearch();else $('#search-dialog').close();}
   if(event.target.matches('g[data-action="node"]')&&(event.key==='Enter'||event.key===' ')){event.preventDefault();event.target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}
-  if(event.target.getAttribute('role')==='tab'&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const tabs=[...event.target.closest('[role="tablist"]').querySelectorAll('[role="tab"]')];const target=tabs[(tabs.indexOf(event.target)+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];target.click();if(target.isConnected)target.focus();}
-  if(event.key==='Escape'){ if($('#search-dialog').open)$('#search-dialog').close();$('#nav-links')?.classList.remove('open');$('#course-sidebar')?.classList.remove('open');document.querySelectorAll('[aria-expanded="true"]').forEach(el=>el.setAttribute('aria-expanded','false')); }
+  if(event.target.getAttribute('role')==='tab'&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const tabs=[...event.target.closest('[role="tablist"]').querySelectorAll('[role="tab"]')];const target=tabs[(tabs.indexOf(event.target)+(['ArrowRight','ArrowDown'].includes(event.key)?1:-1)+tabs.length)%tabs.length];target.click();if(target.isConnected)target.focus();}
+  if(event.key==='Escape'){ if($('#search-dialog').open)$('#search-dialog').close();if($('#nav-links')?.classList.contains('open'))closeMobileNav(true);$('#course-sidebar')?.classList.remove('open');document.querySelectorAll('[aria-expanded="true"]').forEach(el=>el.setAttribute('aria-expanded','false')); }
 });
 $('#search-dialog').addEventListener('click',event=>{if(event.target===$('#search-dialog')){const rect=event.target.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)event.target.close();}});
 document.querySelector('.skip-link').addEventListener('click',event=>{event.preventDefault();$('#main').focus();});
