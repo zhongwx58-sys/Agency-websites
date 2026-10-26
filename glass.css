@@ -167,7 +167,10 @@ dialog::backdrop { background: #233e6247; -webkit-backdrop-filter: blur(5px); ba
   #header .brand { display: none; }#header .mobile-toggle { display: flex; flex: none; width: 44px; height: 44px; border-radius: 50%; margin: 0; color: #315eae; }
   #header .nav-links, #header .nav-actions { display: none; }
   #header:has(.nav-links.open) { width: 108px; }#header:has(.nav-links.open) .glass-rail { width: 108px; padding: 8px 9px 12px; border-radius: 37px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  #header:has(.nav-links.open) .brand { display: flex; flex-direction: row; justify-content: center; gap: 7px; font-size: 11px; padding: 3px 0 14px; order: 1; }
+  #header:has(.nav-links.open) .brand-mark { width: 25px; height: 25px; border-radius: 9px; }#header:has(.nav-links.open) .brand-mark .icon { width: 18px; height: 18px; }
   #header:has(.nav-links.open) .mobile-toggle { margin: 0 auto 10px; }
+  #header .mobile-toggle { order: 0; }#header .nav-links { order: 2; }#header .nav-actions { order: 3; }
   #header .nav-links.open { display: grid; position: relative; top: auto; right: auto; left: auto; flex-shrink: 0; }
   #header .nav-links a { min-height: 70px; font-size: 11px; }
   #header:has(.nav-links.open) .nav-actions { display: flex; margin-top: 10px; padding-top: 9px; gap: 8px; flex-shrink: 0; }

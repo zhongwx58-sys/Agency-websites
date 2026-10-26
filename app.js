@@ -222,10 +222,11 @@ function closeMobileNav(restoreFocus=false) {
   $('#nav-links')?.classList.remove('open');
   const toggle=$('[data-action="mobile-nav"]');
   toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','打开导航');
+  if(toggle)toggle.innerHTML=icon('menu');
   if(restoreFocus)toggle?.focus();
 }
 document.addEventListener('click', async event => {
-  if (event.target.closest('#nav-links a, .nav-start, #course-sidebar a')) {
+  if (event.target.closest('#nav-links a, .nav-start, .glass-rail .brand, #course-sidebar a')) {
     closeMobileNav();
     $('#course-sidebar')?.classList.remove('open');
     document.querySelectorAll('[data-action="mobile-nav"], [data-action="course-menu"]').forEach(toggle => toggle.setAttribute('aria-expanded','false'));
@@ -236,7 +237,7 @@ document.addEventListener('click', async event => {
     case 'search':if($('#nav-links').classList.contains('open'))closeMobileNav(true);openSearch();break;
     case 'close-search':$('#search-dialog').close();break;
     case 'search-result':$('#search-dialog').close();break;
-    case 'mobile-nav':{const open=$('#nav-links').classList.toggle('open');button.setAttribute('aria-expanded',open);button.setAttribute('aria-label',open?'关闭导航':'打开导航');window.refreshGlass?.();break;}
+    case 'mobile-nav':{const open=$('#nav-links').classList.toggle('open');button.setAttribute('aria-expanded',open);button.setAttribute('aria-label',open?'关闭导航':'打开导航');button.innerHTML=icon(open?'close':'menu');window.refreshGlass?.();break;}
     case 'close-nav':closeMobileNav(true);break;
     case 'filter':location.hash=`#/courses/${button.dataset.filter}`;break;
     case 'network-mode':networkMode=button.dataset.mode;selectedNode=null;updateNetwork();document.querySelector(`[data-mode="${networkMode}"]`)?.focus();break;
