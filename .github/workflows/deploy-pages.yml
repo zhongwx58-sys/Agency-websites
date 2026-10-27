@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -50,6 +51,26 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Wait for the existing branch-based Pages deployment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            for (let attempt = 0; attempt < 36; attempt++) {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                ...context.repo,
+                head_sha: context.sha,
+                per_page: 30,
+              });
+              const pending = data.workflow_runs.some(run =>
+                run.event === 'dynamic' &&
+                run.name === 'pages build and deployment' &&
+                run.status !== 'completed'
+              );
+              if (!pending) return;
+              core.info('Waiting for the previous Pages publishing flow to finish.');
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+            throw new Error('The previous Pages publishing flow did not finish in time.');
       - name: Publish website
         id: deployment
         uses: actions/deploy-pages@v4

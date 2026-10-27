@@ -52,9 +52,11 @@ pnpm start
 
 ## 部署
 
-发布目录为 `dist`，使用能提供 HTML/JS/CSS 和静态资源的托管服务。目录 URL（如 `/start/`）对应 `start/index.html`，文章对应 `/lessons/1-1.html`。本次没有变更原有线上网站或推送到远程仓库。
+发布目录为 `dist`。目录 URL（如 `/start/`）对应 `start/index.html`，文章对应 `/lessons/1-1.html`。GitHub Actions 会将完整构建产物发布到 Pages。
 
-部署到子路径时，在构建前设置 `SITE_BASE`；还需统一检查页面内绝对资源 URL 与原站样式中的绝对链接。本次只验证根路径，不宣称子目录部署已通过。
+GitHub Pages 地址为 https://zhongwx58-sys.github.io/Agency-websites/ 。仓库源码位于 `site/`，每次推送 `main` 会自动构建、发布，地址保持不变。部署状态可在仓库 Actions 中查看。
+
+GitHub Actions 使用 `SITE_BASE=/Agency-websites/`；图片、正文链接、导航与搜索已按子路径适配。仓库保留原有旧版文件；新版流程会等待旧的分支发布结束后再发布，避免旧页面覆盖新页面。
 
 ## 来源与许可
 
