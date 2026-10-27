@@ -1,0 +1,28 @@
+# 教学片段，不能直接导入运行。不是已实测配置。
+# 合并到自己的 Mihomo 配置，并使用真实参数替换占位符。
+# 必须已有名为「前置代理」的节点或策略组，且不能指回此落地出口。
+# 不要将账号、密码、订阅链接提交到公开仓库。
+proxies:
+  - name: 住宅落地
+    type: socks5
+    server: proxy.example.com
+    port: 1080
+    username: REPLACE_WITH_USERNAME
+    password: REPLACE_WITH_PASSWORD
+    dialer-proxy: 前置代理
+    udp: false
+
+proxy-groups:
+  - name: 指定出口
+    type: select
+    proxies:
+      - 住宅落地
+      - DIRECT
+
+rules:
+  - DOMAIN-SUFFIX,example.com,指定出口
+  - MATCH,DIRECT
+
+# 核验：配置解析 → 前置可用 → 连接链路 → 最终出口 → 目标网站访问。
+# 此片段假定 SOCKS5 TCP；UDP 能力按服务商与完整链路实际支持单独核对。
+# 恢复：启用修改前配置，关闭测试连接并重新发起请求核对。

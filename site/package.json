@@ -1,0 +1,28 @@
+{
+  "name": "proxy-guide-replica",
+  "version": "0.1.0",
+  "private": true,
+  "description": "路由课：CodexGuide 界面复刻与代理配置教程",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "dev": "vuepress dev docs --host 127.0.0.1 --port 5174",
+    "build": "vuepress build docs && node scripts/build-search-worker.mjs",
+    "start": "node server.mjs",
+    "preview": "node server.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@vuepress/bundler-vite": "2.0.0-rc.28",
+    "@vuepress/plugin-slimsearch": "2.0.0-rc.128",
+    "esbuild": "0.27.7",
+    "sass-embedded": "^1.97.2",
+    "typescript": "5.9.3",
+    "vue": "^3.5.26",
+    "vuepress": "2.0.0-rc.28",
+    "vuepress-theme-hope": "2.0.0-rc.106"
+  },
+  "packageManager": "pnpm@11.25.0"
+}
